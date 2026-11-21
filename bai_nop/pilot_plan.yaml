@@ -1,0 +1,58 @@
+# Kế hoạch pilot trợ lý hoàn phí LogiX-VN (Gate 2a)
+# Số liệu dùng cho luật và cỡ mẫu lấy từ lab13.py (đầu ra D1, E1) và bảng độ nhạy (B1–B4).
+# Mọi số tài chính lấy từ cột *_simulated đều là GIẢ LẬP.
+
+pilot:
+  name: "Pilot trợ lý hoàn phí LogiX-VN, giai đoạn 1"
+  owner: "Giám đốc vận hành LogiX-VN"
+  scope: "Chỉ noi_dia và hang_nang (0,22× và 0,69× so với 12.000 đ, simulated); loại quoc_te (1,88×, thành công 27,3%) và doi_tac (0,85×, có điều khoản riêng) không nằm trong pilot"
+  population: "40 nhân viên CSKH trong 12 depot, phân tầng theo depot"
+  assignment:
+    unit: "staff"
+    control_share: 0.5
+    randomized: true
+    seed: "ghi trước khi bốc thăm, lưu trong bai_nop/lab13.py"
+    method: "bốc thăm bằng code, phân tầng theo depot"
+  rollout: [0.10, 0.25, 0.50]   # 4 → 10 → 20 nhân viên trợ lý; chỉ đo chỉ số chính từ bước 0.50
+  duration_weeks: 2
+  primary_metric:
+    name: "dong_trong_24h_khong_mo_lai_7_ngay"
+    definition: "tỉ lệ yêu cầu có dong_trong_24h = 1 và mo_lai_trong_7_ngay = 0"
+    baseline: 0.70
+    mde: 0.06                   # đánh đổi đã chấp nhận: tác động thật 5 điểm cho power khoảng 0,64
+    alpha: 0.05
+    power: 0.80
+    n_per_arm: 859
+    design_effect: 6.96
+    clusters_per_arm: 20
+  identifiability:
+    unit_of_randomization: "nhân viên (staff_id)"
+    clusters_per_arm: 20
+    spillover_control: "quyền truy cập theo tài khoản; log lượt mở trợ lý theo staff_id; không cho nhóm đối chứng xem câu trả lời của nhóm trợ lý"
+    concurrent_control: "nhóm đối chứng làm cùng tuần, cùng depot, cùng loại yêu cầu"
+    pre_registered_before: "ngày bắt đầu pilot"
+  interim_looks:
+    - at: "cuối bước 0.10 (tuần 1)"
+      allowed_use: "chỉ theo dõi an toàn: mở lại, hoàn trùng, chi phí; không dùng để kết luận tác động"
+    - at: "cuối bước 0.25 (tuần 1 đến 2)"
+      allowed_use: "chỉ theo dõi an toàn và tỉ lệ bỏ qua gợi ý"
+    - at: "cuối pilot, sau 2 tuần ở bước 0.50"
+      allowed_use: "đánh giá chỉ số chính, quyết định sang giai đoạn tiếp theo"
+  interim_correction: "không kết luận tác động trước bước cuối; ngưỡng an toàn không điều chỉnh theo kết quả đã thấy"
+  simulated_inputs:
+    - name: "phut_xem_lai_simulated"
+      used_for: "chi phí xem lại trong lab13.py"
+      replace_with: "phut_xem_lai đo thật từ event staff_review_decision sau tuần 1"
+    - name: "phut_lam_lai_simulated"
+      used_for: "chi phí làm lại trong lab13.py"
+      replace_with: "phut_lam_lai đo thật từ event staff_rework_completed sau tuần 1"
+    - name: "bảng giá token, tool, lương phút"
+      used_for: "chi phí trợ lý"
+      replace_with: "giá thật từ nhà cung cấp và kế toán, cập nhật trước bước 0.25"
+  stop_rules:
+    - "NẾU mở lại 7 ngày của nhóm trợ lý cao hơn đối chứng ≥ 2 điểm, hoặc vượt 6%, hoặc có ≥ 1 ca hoàn trùng TRONG 3 ngày liên tiếp, THÌ Giám đốc vận hành tắt trợ lý trong 30 phút, KHÔNG THÌ không được sang bước rollout tiếp theo."
+    - "NẾU chi phí mỗi việc thành công > 8.000 đ (simulated) TRONG 2 tuần liên tiếp, THÌ PM trợ lý hoàn phí thu hẹp pilot về noi_dia và giới hạn 2 lần chạy, KHÔNG THÌ không được mở hang_nang."
+    - "NẾU tỉ lệ bỏ qua gợi ý (sửa + bỏ) > 40% TRONG 1 tuần, THÌ Trưởng nhóm CSKH phỏng vấn 5 nhân viên trong 3 ngày, KHÔNG THÌ không được chuyển bước rollout."
+  rollback: "Giám đốc vận hành bấm cờ tắt trợ lý, hiệu lực trong 30 phút; khách được phục vụ bằng luồng nhân viên tự làm (12.000 đ mỗi yêu cầu, 6 phút)."
+  decision_date: "2027-01-05"
+  decision_owner: "Giám đốc vận hành LogiX-VN"
